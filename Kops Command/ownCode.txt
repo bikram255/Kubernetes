@@ -1,0 +1,84 @@
+t2medium
+
+Generate SSH Key
+$ssh-keygen
+
+Then go to usr/local/bin
+$ cd /usr/local/bin/
+
+Then download the kops 
+$ wget https://github.com/kubernetes/kops/releases/download/v1.28.7/kops-linux-amd64
+$ mv kops-linux-amd64 kops
+$ chmod 777 kops
+
+Install kubectl
+$ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+$ chmod 777 kubectl
+$ cd
+
+edit .bashrc and add all the env variables
+
+$ vi .bashrc
+export NAME=samantaraybikram.info
+export KOPS_STATE_STORE=s3://samantaraybikram.info
+export AWS_REGION=ap-south-1
+export CLUSTER_NAME=samantaraybikram.info
+export EDITOR='/usr/bin/nano'
+alias ku=kubectl
+
+$ source .bashrc
+$ env
+
+Paste it in terminal (Change it accordingly, specially ssh key name)
+kops create cluster --name=samantaraybikram.info \
+--state=s3://samantaraybikram.info --zones=ap-south-1a,ap-south-1b \
+--node-count=2 --control-plane-count=1 --node-size=t3.medium --control-plane-size=t3.medium \
+--control-plane-zones=ap-south-1a --control-plane-volume-size 15 --node-volume-size 15 \
+--ssh-public-key ~/.ssh/id_rsa.pub \
+--dns-zone=samantaraybikram.info --dry-run --output yaml
+
+Copy paste the dryrun output in cluster.yml and change anything if u required
+$ kops create -f cluster.yml
+$ kops delete -f cluster.yml --yes --------------------------------------If we are deleting the cluster.
+$ kops update cluster --name samantaraybikram.info --yes --admin
+$ kops validate cluster --wait 10m
+$ kubectl cluster-info
+
+
+Install Kubens for NameSpace change.
+$ cd /usr/local/bin
+$ wget https://github.com/ahmetb/kubectx/releases/download/v0.9.5/kubens_v0.9.5_linux_x86_64.tar.gz
+$ tar zxvf kubens_v0.9.5_linux_x86_64.tar.gz
+$ rm -rf kubens_v0.9.5_linux_x86_64.tar.gz
+$ kubens
+$ kubens mynamespace
+
+We can use Lens app to see the Kubernetes Cluster Visually, We can also create and manage the Cluster from Lens
+
+
+To see the pods locally without exposing the pods we can run the below command in Lens and without service exposing also we can acihive it.
+To forward the port we can check inside the lens terminal
+$ kubectl -n mynamespace port-forward testpod1 8000:80
+
+
+
+kops get cluster --name samantaraybikram.info -o yaml | grep dns
+
+
+
+--------------------------------
+error: You must be logged in to the server (the server has asked for the client to provide credentials)
+If certificate has expired then:
+
+Fix Certificate Issues (if applicable)
+For self-managed clusters, if the certificates have expired, you may need to renew them:
+
+bash
+Copy code
+kops update cluster --name <cluster-name> --yes
+kops rolling-update cluster --name <cluster-name> --yes
+----------------------------------------------------
+
+
+
+
